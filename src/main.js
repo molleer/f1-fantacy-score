@@ -1,6 +1,6 @@
 const fetchAndSave = require("./fetchData");
 const fs = require("fs");
-const { sortObj } = require("./utils");
+const { sortObj, getChoices } = require("./utils");
 
 /*fetchAndSave(2021, 22, "results/2021_results.json")
   .catch(err => console.log(err))
@@ -268,6 +268,7 @@ const driverPrise = {
   raikkonen: 9.0,
   mazepin: 5.5,
   latifi: 7.0,
+  giovinazzi: 8.0,
 };
 
 const score = calculateScore();
@@ -287,5 +288,43 @@ for (const i in constructorsPrise) {
   prisePerPoint.constructors[i] = constructorsPrise[i] / score.constructors[i];
 }
 
-console.log(sortObj(prisePerPoint.drivers));
-console.log(sortObj(prisePerPoint.constructors));
+const choices = getChoices(Object.keys(driverPrise), 5);
+
+let costs = [];
+for (const i in choices) {
+  let cost = 0;
+  for (const driver of choices[i]) cost += driverPrise[driver];
+  costs.push(cost);
+}
+
+let scores = [];
+for (const i in choices) {
+  let choice_score = 0;
+  for (const driver of choices[i]) choice_score += score.drivers[driver];
+  scores.push(choice_score);
+}
+
+let optimal_i = 0;
+let optimal_constructor = "";
+let best_score = 0;
+for (const i in choices) {
+  for (const c in constructorsPrise) {
+    if (costs[i] + constructorsPrise[c] > 100) continue;
+    if (scores[i] + score.constructors[c] > best_score) {
+      best_score = scores[i] + score.constructors[c];
+      optimal_i = i;
+      optimal_constructor = c;
+    }
+  }
+}
+
+console.log("Optimal drivers:", choices[optimal_i]);
+console.log("Optimal constructor:", optimal_constructor);
+console.log(
+  "Points:",
+  scores[optimal_i] + score.constructors[optimal_constructor],
+);
+console.log(
+  "Prise:",
+  costs[optimal_i] + constructorsPrise[optimal_constructor],
+);
